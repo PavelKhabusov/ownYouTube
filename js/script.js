@@ -5,7 +5,7 @@ window.addEventListener('DOMContentLoaded', () => {
         modal = document.querySelector('.modal'),
         videos = document.querySelectorAll('.videos__item');
   let player;
-
+  // Hamburger
   let bindSlideToggle = (trigger, boxBody, content, openClass) => {
     let button = {
       'element': document.querySelector(trigger),
@@ -25,22 +25,23 @@ window.addEventListener('DOMContentLoaded', () => {
         box.classList.add(openClass);
       }
     });
-  }
+  };
   bindSlideToggle('.hamburger', '[data-slide="nav"]', '.header__menu', 'slide-active');
 
+  // Night mode
+  let drawWhite = (selector, color) => {
+    document.querySelectorAll(selector).forEach(item => {
+      item.style.stroke = color;
+      item.style.color = color;
+    });
+  }
+  let drawAll = color => {
+    drawWhite('.hamburger > line', color);
+    drawWhite('.videos__item-descr', color);
+    drawWhite('.videos__item-views', color);
+    drawWhite('.header__item-descr', color);
+  }
   let switchMode = () => {
-    let drawWhite = (selector, color) => {
-      document.querySelectorAll(selector).forEach(item => {
-        item.style.stroke = color;
-        item.style.color = color;
-      });
-    }
-    let drawAll = (color) => {
-      drawWhite('.hamburger > line', color);
-      drawWhite('.videos__item-descr', color);
-      drawWhite('.videos__item-views', color);
-      drawWhite('.header__item-descr', color);
-    }
     if (night) {
       night = false;
       document.body.classList.remove('night');
@@ -52,12 +53,13 @@ window.addEventListener('DOMContentLoaded', () => {
       drawAll('#fff');
       document.querySelector('.logo > img').src = 'logo/youtube_night.svg';
     }
-  }
+  };
   let night = false;
   switcher.addEventListener('change', () => {
     switchMode();
   });
 
+  // Dynamic videos
   const data = [
     ['img/thumb_3.webp', 'img/thumb_4.webp', 'img/thumb_5.webp'],
     ['#3 Верстка на flexbox CSS | Блок преимущества и галерея | Марафон верстки | Артем Исламов',
@@ -70,7 +72,6 @@ window.addEventListener('DOMContentLoaded', () => {
   more.addEventListener('click', () => {
     const videosWrapper = document.querySelector('.videos__wrapper');
     more.remove();
-
     for (let i = 0; i < data[0].length; i++) {
       let card = document.createElement('a');
           card.classList.add('videos__item', 'videos__item-active');
@@ -84,6 +85,88 @@ window.addEventListener('DOMContentLoaded', () => {
       setTimeout(() => {
         card.classList.remove('videos__item-active');
       }, 10);
+      bindNewModal(card);
+    }
+    if (night) {
+      drawAll('#fff');
+    }
+    sliceTitle('.videos__item-descr', 80);
+  });
+
+  // Videos title slicing
+  let sliceTitle = (selector, count) => {
+    document.querySelectorAll(selector).forEach(item => {
+      item.textContent.trim();
+
+      if (item.textContent.length < count) {
+        return;
+      } else {
+        const str = item.textContent.slice(0, count + 1) + '...';
+        item.textContent = str;
+      }
+    });
+  };
+  sliceTitle('.videos__item-descr', 80);
+
+  // Modal
+  let openModal = () => {
+    modal.style.display = 'block';
+  };
+  let closeModal = () => {
+    modal.style.display = 'none';
+    player.stopVideo();
+  };
+    // Bind Modal for all cards
+  let bindModal = cards => {
+    cards.forEach(item => {
+      item.addEventListener('click', e => {
+        e.preventDefault();
+        const id = item.getAttribute('data-url');
+        loadVideo(id);
+        openModal();
+      });
+    });
+  };
+  bindModal(videos);
+    // Bind Modal for new cards
+  let bindNewModal = card => {
+    card.addEventListener('click', e => {
+        e.preventDefault();
+        const id = card.getAttribute('data-url');
+        loadVideo(id);
+        openModal();
+    });
+  };
+    // Overlay click close
+  modal.addEventListener('click', e => {
+    let t = e.target;
+    if(!t.classList.contains('modal__body')){
+      closeModal();
     }
   });
+  document.body.addEventListener('keydown', e => {
+    if(e.which == 27){
+      closeModal();
+    }
+  });
+    // Adding videos by YouTube API
+  let createVideo = () => {
+    var tag = document.createElement('script');
+
+    tag.src = "https://www.youtube.com/iframe_api";
+    var firstScriptTag = document.getElementsByTagName('script')[0];
+    firstScriptTag.parentNode.insertBefore(tag, firstScriptTag);
+
+    setTimeout(() => {
+      player = new YT.Player('frame', {
+        height: '100%',
+        width: '100%',
+        videoId: 'M7lc1UVf-VE'
+      });
+    }, 300);
+  };
+  createVideo();
+  let loadVideo = (id) => {
+    player.loadVideoById({'videoId':`${id}`});
+  };
 });
